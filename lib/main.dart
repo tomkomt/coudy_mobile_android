@@ -32,6 +32,7 @@ class HomePage extends StatefulWidget {
         this.buttonColor,
         this.recordPath,
         this.localIp = '192.168.1.252',
+        this.remoteIp = '192.168.1.29',
         this.useLocalApi = false
       }
       ) : super(key: key);
@@ -41,6 +42,7 @@ class HomePage extends StatefulWidget {
   Color buttonColor;
   String recordPath;
   String localIp = '192.168.1.252';
+  String remoteIp = '192.168.1.29';
   bool useLocalApi = false;
 
   @override
@@ -106,17 +108,24 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  _onRemoteIpChange(String newValue) {
+    print('_onRemoteIpChange: $newValue');
+    setState(() {
+      widget.remoteIp = newValue;
+    });
+  }
+
   Future _uploadRecord() async {
     try {
       File recordFile = File(widget.recordPath);
       var stream = new http.ByteStream(DelegatingStream.typed(recordFile.openRead()));
       var length = await recordFile.length();
 
-      var uri = Uri.parse("http://192.168.1.29:3000/api/v1/mobile");
+      var uri = Uri.parse("http://${widget.remoteIp}:3000/api/v1/mobile");
       if(widget.useLocalApi == true) {
         uri = Uri.parse("http://${widget.localIp}:3000/api/v1/mobile");
       } else {
-        uri = Uri.parse("http://192.168.1.29:3000/api/v1/mobile");
+        uri = Uri.parse("http://${widget.remoteIp}:3000/api/v1/mobile");
       }
       print('URI: $uri');
       var request = new http.MultipartRequest("POST", uri);
@@ -156,12 +165,32 @@ class _HomePageState extends State<HomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Container(
+                child: Center(
+                    child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Text(
+                            'Set an IP address for Coudy Dispatcher instance:'
+                          ),
+                          TextField(
+                            onSubmitted: _onRemoteIpChange,
+                            decoration: InputDecoration(
+                                border: InputBorder.none,
+                                hintText: widget.remoteIp
+                            ),
+                            textAlign: TextAlign.center,
+                          )
+                        ]
+                    )
+                )
+            ),
+            Container(
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Text(
-                      'Set an IP address for local API:'
+                      'Set an IP address for development instance:'
                     ),
                     TextField(
                       onSubmitted: _onLocalIpChange,
@@ -181,14 +210,14 @@ class _HomePageState extends State<HomePage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
                     Text(
-                      'Remote API'
+                      'Coudy Dispatcher'
                     ),
                     Switch(
                         value: widget.useLocalApi,
                         onChanged: _onApiSwitchChange
                     ),
                     Text(
-                      'Localhost API'
+                      'Development'
                     )
                   ]
                 )
